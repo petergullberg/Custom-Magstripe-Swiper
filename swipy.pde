@@ -1,7 +1,8 @@
-#define PIEZO 3
+// Using Arduino Uno 
+#define PIEZO 5
 #define CLOCK2 10
-#define DATA2 9
-#define CARD2 23
+#define DATA2 11
+#define CARD2 12
 
 #define TRACK1_LEN 79
 #define BUFF 30
@@ -38,6 +39,12 @@ void setup()
   pinMode(PIEZO, OUTPUT);
   digitalWrite(5, LOW);
   
+  // Just being explicit.
+  pinMode(CARD2, INPUT);      // sets as input
+  pinMode(CLOCK2, INPUT);      // sets as input
+  pinMode(DATA2, INPUT);      // sets the  as input
+  pinMode(LED_BUILTIN, OUTPUT);
+  
   beep(PIEZO, 4000, 200);
 }
 
@@ -45,6 +52,7 @@ void setup()
 
 void loop()
 {
+  // Wait for "CardSwipe"
   while (digitalRead(CARD2));
   uint8_t zeros = 0;
   
@@ -56,14 +64,18 @@ void loop()
 
       // wait while clock is high
       while (digitalRead(CLOCK2) && !digitalRead(CARD2));
-      // we sample on the falling edge!
+      
+      // Most F2F decoders have data available at the rising edge (including maktek, so wait for that
+      // This gives more reliable reading (in both directions)
+
+      // keep hanging out while its low
+      while (!digitalRead(CLOCK2) && !digitalRead(CARD2));
+        
       uint8_t x = digitalRead(DATA2);
       if (!x) {
       // data is LSB and inverted!
         track1[t1] |= _BV(b);
       }
-      // heep hanging out while its low
-      while (!digitalRead(CLOCK2) && !digitalRead(CARD2));
      
     }
     
@@ -238,6 +250,15 @@ void loop()
         Keyboard.send_now();
       }
 
+#else
+//PEGE
+      Serial.print("\nExpiryx:");
+      Serial.print(m1);
+      Serial.print(m2);
+      Serial.print("/");
+      Serial.print(y1);
+      Serial.print(y2);
+      Serial.print("\n");
 #endif
 
     beep(PIEZO, 4000, 200);
